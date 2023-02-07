@@ -1,0 +1,19 @@
+(1) Accept a text file on command line argument. 
+    (If not aware of command line then take file name as 
+    test.txt, keep it in the current directory)
+(2) Create a vector of all words in text file 
+(3) Ask end user for a word to search 
+(4) Print how many times the word appears in the file 
+    if word does not exist, the output should be zero 
+
+# WITHOUT COMMAND LINE 
+
+#prog.exe 
+
+Enter a word to search: <user will enter a word> 
+WORD APPEARS <THESE MANY NUMBER OF TIMES> 
+
+# WITH COMMAND LINE 
+
+#prog.exe file_name word
+WORD APPEARS <THESE MANY NUMBER OF TIMES> 
