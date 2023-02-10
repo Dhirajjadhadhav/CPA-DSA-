@@ -40,7 +40,7 @@ status_t insert_after(list_t* p_list, data_t e_data, data_t new_data)
 
 status_t insert_before(list_t* p_list, data_t e_data, data_t new_data)
 {
-    node_t* p_end = NULL;
+    node_t* p_enode = NULL;
 
     if(NULL == (p_enode = search_node(p_list, e_data)))
         return (LIST_DATA_NOT_FOUND);
@@ -63,7 +63,7 @@ status_t get_end(list_t* p_list, data_t* p_end_data)
     if(is_empty(p_list))
         return (LIST_EMPTY);
     
-    p_end_data = p_list->prev->data;
+    *p_end_data = p_list->prev->data;
     return (SUCCESS);
 }
 
@@ -77,7 +77,7 @@ status_t pop_start(list_t* p_list, data_t* p_start_data)
     return (SUCCESS);
 }
 
-status_t pop_end(list_t* p_list, data* p_end_data)
+status_t pop_end(list_t* p_list, data_t* p_end_data)
 {
     if(is_empty(p_list))
         return (LIST_EMPTY);
@@ -117,7 +117,7 @@ status_t remove_data(list_t* p_list, data_t e_data)
 
 Bool is_empty(list_t* p_list)
 {
-    return (p_list->next == p_list && p_list->prev == p_list)
+    return (p_list->next == p_list && p_list->prev == p_list);
 }
 
 Bool is_memeber(list_t* p_list, data_t data)
@@ -150,6 +150,7 @@ void show(list_t* p_list, const char* msg)
     while(p_run != p_list)
     {
         printf("[%d]<->", p_run->data);
+        p_run = p_run->next;
     }
     puts("[END]");
 
@@ -161,6 +162,7 @@ void to_array(list_t* p_list, data_t** pp_array, size_t* p_size)
     size_t size = 0;
     data_t* p_array  = NULL;
     len_t len = 0;
+    size_t i;
 
     len = get_length(p_list);
     size = len;
@@ -177,7 +179,7 @@ void to_array(list_t* p_list, data_t** pp_array, size_t* p_size)
         p_array[i] = p_run->data;
 
     *pp_array = p_array;
-    p_size = size;
+    *p_size = size;
 
 }
 
@@ -200,14 +202,55 @@ list_t* concat(list_t* p_list_1, list_t* p_list_2)
     p_new_list = create_list();
     for(p_run = p_list_1->next; p_run != p_list_1; p_run = p_run->next)
         insert_end(p_new_list, p_run->data);
+    show(p_list_1, "p_list_1 debug :");
     for(p_run = p_list_2->next; p_run != p_list_2; p_run = p_run->next)
         insert_end(p_new_list, p_run->data);
+    show(p_list_2, "p_list_2 debug :");
     
     return (p_new_list);
 }
 
 list_t* merge(list_t* p_list_1, list_t* p_list_2)
 {
+    node_t* p_run_1 = NULL;
+    node_t* p_run_2 = NULL;
+    list_t* p_merged_list = NULL;
+
+    p_merged_list = create_list();
+    p_run_1 = p_list_1->next;
+    p_run_2 = p_list_2->next;
+
+    while(TRUE)
+    {
+        if(p_run_1 == p_list_1)
+        {
+            while(p_run_2 != p_list_2)
+            {
+                insert_end(p_merged_list,p_run_2->data);
+                p_run_2 = p_run_2->next;
+            }
+            break;
+        }
+        if(p_run_2 == p_list_2)
+        {
+            while(p_run_1 != p_list_1)
+            {
+                insert_end(p_merged_list, p_run_1->data);
+                p_run_1 = p_run_1->next;
+            }
+            break;
+        }
+        if(p_run_1->data<=p_run_2->data)
+        {
+            insert_end(p_merged_list, p_run_1->data);
+            p_run_1 = p_run_1->next;
+        }
+        else
+        {
+            insert_end(p_merged_list, p_run_2->data);
+            p_run_2 = p_run_2->next;
+        }
+    }
 
 }
 
@@ -219,7 +262,7 @@ list_t* get_reversed_list(list_t* p_list)
     p_reversed_list  = create_list();
     p_run = p_list->next;
     while(p_run != p_run)
-        insert_start(p_reversed_list, p_run_>data);
+        insert_start(p_reversed_list, p_run->data);
     
     return (p_reversed_list);
 }
@@ -228,7 +271,7 @@ status_t append(list_t* p_list_1, list_t** pp_list_2)
 {
     list_t* p_list_2 = *pp_list_2;
 
-    if(is_empty(p_list))
+    if(is_empty(p_list_2))
         goto out;
     
     p_list_1->prev->next = p_list_2->next;
@@ -237,14 +280,51 @@ status_t append(list_t* p_list_1, list_t** pp_list_2)
     p_list_1->prev  = p_list_2->prev;
 
 out:
-    free(p_list_2)
+    free(p_list_2);
     *pp_list_2 = NULL;
     return (SUCCESS);
 }
 
-status_t reversed_list(list_t* p_list);
+status_t reverse_list(list_t* p_list)
+{
+   node_t* orginal_first_node = NULL;
+   node_t* p_run = NULL;
+   node_t* p_run_next = NULL;
+ 
+    if(is_empty(p_list) || p_list->next == p_list)
+        return (SUCCESS);
+    
+    orginal_first_node = p_list->next;
+    for(p_run = p_list->next->next; p_run != p_list; p_run = p_run_next)
+    {
+        p_run_next = p_run->next;
+        generic_insert(p_list, p_run, p_list->next);
+    }
 
-status_t destroy_list(list_t** pp_list);
+    orginal_first_node->next = p_list;
+    p_list->prev  = orginal_first_node;
+
+    return (SUCCESS);
+}
+
+status_t destroy_list(list_t** pp_list)
+{
+    node_t* p_run = NULL;
+    node_t* p_run_next = NULL;
+    list_t* p_list = NULL;
+    
+
+    p_list = *pp_list;
+    for(p_run = p_list->next; p_run != p_list; p_run = p_run_next)
+    {
+        p_run_next = p_run->next;
+        free(p_run);
+    }
+    free(p_list);
+    *pp_list = NULL;
+
+    return (SUCCESS);
+}
 
 /* Declaration : Helper function */
 static void generic_insert(node_t* p_beg, node_t* p_mid, node_t* p_end)
@@ -255,15 +335,25 @@ static void generic_insert(node_t* p_beg, node_t* p_mid, node_t* p_end)
     p_end->prev = p_mid;
 }
 
-static void generic_delete(ode_t* p_delete_node)
+static void generic_delete(node_t* p_delete_node)
 {
-
+    p_delete_node->next->prev = p_delete_node->prev;
+    p_delete_node->prev->next = p_delete_node->next;
+    free(p_delete_node);
 }
 
 static node_t* search_node(list_t* p_list, data_t s_data)
 {
+    node_t* p_run = NULL;
+    
+    for(p_run = p_list->next; p_run != NULL; p_run = p_run->next)
+        if(p_run->data == s_data)
+            return (p_run);
+    
+    return (NULL);
 
 }
+
 static node_t* get_node(data_t new_data)
 {
     node_t* p_node = NULL;

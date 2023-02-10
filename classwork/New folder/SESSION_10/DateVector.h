@@ -13,7 +13,7 @@ struct DateVector
     int iSize;
 };
 
-struct DateVector* createDateVector(void);
+struct DateVector* CreateDateVector(void);
 int PushBack(struct DateVector* pDateVector, struct Date* pDate);
 int DestroyDateVector(struct DateVector* pDateVector);
 

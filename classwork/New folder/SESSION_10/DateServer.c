@@ -157,7 +157,7 @@ int showDate(int iDateId)
 {
      if(
         iDateId<0 || 
-        iDateId <=pHandleTable->iSize ||
+        iDateId>=pHandleTable->iSize ||
         pHandleTable->pDateTable[iDateId] == NULL
     )
         return (E_INVALID_HANDLE);

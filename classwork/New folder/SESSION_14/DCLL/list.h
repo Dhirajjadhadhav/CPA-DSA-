@@ -35,7 +35,7 @@ status_t insert_before(list_t* p_list, data_t e_data, data_t new_data);
 status_t get_start(list_t* p_list, data_t* p_start_data);
 status_t get_end(list_t* p_list, data_t* p_end_data);
 status_t pop_start(list_t* p_list, data_t* p_start_data);
-status_t pop_end(list_t* p_list, data* p_end_data);
+status_t pop_end(list_t* p_list, data_t* p_end_data);
 
 status_t remove_start(list_t* p_list);
 status_t remove_end(list_t* p_list);
@@ -46,20 +46,20 @@ Bool is_memeber(list_t* p_list, data_t data);
 void show(list_t* p_list, const char* msg);
 
 void to_array(list_t* p_list, data_t** pp_array, size_t* p_size);
-list_t* to_list(data_t* p_array, size_t* size);
+list_t* to_list(data_t* p_array, size_t size);
 
 list_t* concat(list_t* p_list_1, list_t* p_list_2);
 list_t* merge(list_t* p_list_1, list_t* p_list_2);
 list_t* get_reversed_list(list_t* p_list);
 
-status_t append(list_t* p_list_1, list_t* p_list_2);
-status_t reversed_list(list_t* p_list);
+status_t append(list_t* p_list_1, list_t** p_list_2);
+status_t reverse_list(list_t* p_list);
 
 status_t destroy_list(list_t** pp_list);
 
 /* Declaration : Helper function */
 static void generic_insert(node_t* p_beg, node_t* p_mid, node_t* p_end);
-static void generic_delete(ode_t* p_delete_node);
+static void generic_delete(node_t* p_delete_node);
 static node_t* search_node(list_t* p_list, data_t s_data);
 static node_t* get_node(data_t new_data);
 static void* xcalloc(size_t nr_elements, size_t size_per_element);
