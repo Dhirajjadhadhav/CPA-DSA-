@@ -9,10 +9,12 @@ int main(void)
     int data;
     int status;
 
+    printf("size  = %llu\n", sizeof(struct node));
+
     p_list  = create_list();
     show_list(p_list, "Initil state:");
 
-    for(data = 10; data<= 100; data += 10)
+    for(data = 10; data <= 100; data += 10)
     {
         status = insert_end(p_list, data);
         assert(status == SUCCESS);
