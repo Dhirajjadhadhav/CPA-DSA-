@@ -1,0 +1,24 @@
+1) How to add a new node in empty binary tree.
+    [simple]
+
+2) How to add a new node in non-empty tree.
+
+BST Propetry:
+    After insertion:
+        for all nodes in BST
+        data in each node in LeftUSubTree   i.e     Data(LeftUSubTree) <= Data(node);
+        data in each node in RightSubTree   i.e     Data(RightSubTree)  > Data(node);
+
+Insert:
+    T: bst_t
+    new_data: data_t
+
+if T is empty
+    T.root_node  = get_new_node(new_data);
+    T.nr_elements += 1
+    return SUCCESS
+
+run_node := root_node
+
+    if new_data <=run_node.data
+    
