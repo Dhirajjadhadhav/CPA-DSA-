@@ -36,4 +36,13 @@ height_t height_bst(bst_t* p_bst);
 status_t destory_bst(bst_t** pp_bst);
 Bool search_bst(bst_t* p_bst, data_t s_data);
 
-#endif  /*_BST_H*/
+void preorder_traversal_nodelevel(bst_node_t* root_node);
+void inorder_traversal_nodelevel(bst_node_t* root_node);
+void postorder_traversal_nodelevel(bst_node_t* root_node);
+height_t height_bst_nodelevel(bst_node_t* root_node);
+void destory_bst_nodelevel(bst_node_t* root_node);
+bst_node_t* search_node(bst_node_t* root_node, data_t s_data);
+bst_node_t* get_bst_node(data_t new_data);
+void* Xcalloc(size_t nr_elements, size_t size_per_element);
+
+#endif;  /*_BST_H*/
