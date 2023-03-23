@@ -24,35 +24,46 @@ status_t add_vertex(graph_t* g, vertex_t v)
     if(pv_node != NULL)
         return (G_VERTEX_EXISTS);
     
-    return (v_insert_end(g->pv_list, v));
+    v_insert_end(g->pv_list, v);
+    g->nr_v += 1;
+    return (SUCCESS);
 }
 
 status_t remove_vertex(graph_t* g, vertex_t v)
+
 {
     vnode_t* pv_delete_node = NULL;
     vnode_t* pv_adj_node_in_list = NULL;
     hnode_t* ph_run = NULL;
-    hnode_t* ph_run_next;
+    hnode_t* ph_run_next = NULL;
     hnode_t* ph_delete_vertex_entry_inadj_list_of_adj_vertex = NULL;
 
     pv_delete_node = v_search_node(g->pv_list, v);
     if(pv_delete_node == NULL)
         return (G_INVALID_VERTEX);
     for(
-        ph_run = pv_delete_node->next;
-        ph_run != pv_delete_node;
+        ph_run = pv_delete_node->ph_list->next;
+        ph_run != pv_delete_node->ph_list;
         ph_run = ph_run_next
     )
     {
         ph_run_next = ph_run->next;
         pv_adj_node_in_list = v_search_node(g->pv_list, ph_run->v);
+        
+        if(pv_adj_node_in_list == NULL)
+            return(G_CORRUPT);
+
         ph_delete_vertex_entry_inadj_list_of_adj_vertex = h_search_node(pv_adj_node_in_list->ph_list, v);
+        if(ph_delete_vertex_entry_inadj_list_of_adj_vertex == NULL)
+            return (G_CORRUPT);
+
         h_generic_delete(ph_delete_vertex_entry_inadj_list_of_adj_vertex);
+        h_generic_delete(ph_run);
         free(ph_run);
         g->nr_e -= 1;
     }
     free(pv_delete_node->ph_list);
-    v_generic_delete(ph_run);
+    v_generic_delete(pv_delete_node);
     g->nr_v -= 1;
 
     return (SUCCESS);
@@ -64,19 +75,20 @@ status_t add_edge(graph_t* g, vertex_t v_start, vertex_t v_end)
     vnode_t* pv_end = NULL;
     hnode_t* ph_start_in_end = NULL;
     hnode_t* ph_end_in_start = NULL;
-
+   
     pv_start = v_search_node(g->pv_list, v_start);
     if(pv_start == NULL)
         return (G_INVALID_VERTEX);
-    pv_end = v_search_node(g->pv_list, v_end);
-    if(pv_end = NULL)
+    pv_end = v_search_node(g->pv_list, v_end); 
+    if(pv_end == NULL)
         return (G_INVALID_VERTEX);
-    
+
     ph_end_in_start = h_search_node(pv_start->ph_list, v_end);
     ph_start_in_end = h_search_node(pv_end->ph_list, v_start);
-
+   
     if(ph_end_in_start != NULL && ph_start_in_end != NULL)
         return (G_EDGE_EXISTS);
+
     h_insert_end(pv_start->ph_list, v_end);
     h_insert_end(pv_end->ph_list, v_start);
 
@@ -113,11 +125,51 @@ status_t remove_edge(graph_t* g, vertex_t v_start, vertex_t v_end)
 
 void show_graph(graph_t* g, const char* msg)
 {
+    vnode_t* pv_run = NULL;
+    hnode_t* ph_run = NULL;
 
+    if(msg)
+        puts(msg);
+    
+    printf("G(V, E) :|V| = %llu, |E = %llu\n", g->nr_v, g->nr_e);
+
+    for(pv_run = g->pv_list->next; pv_run != g->pv_list; pv_run = pv_run->next)
+    {
+        printf("[%lld]\t->\t", pv_run->v);
+        for(ph_run = pv_run->ph_list->next; ph_run != pv_run->ph_list; ph_run = ph_run->next)
+        {
+            printf("[%lld]<->", ph_run->v);
+        }
+
+        puts("[END]");
+    }
 }
 status_t destroy_graph(graph_t** pp_g)
 {
+    vnode_t* pv_run = NULL;
+    vnode_t* pv_run_next = NULL;
+    hnode_t* ph_run = NULL;
+    hnode_t* ph_run_next = NULL;
 
+    graph_t* g = *pp_g;
+
+    for(pv_run = g->pv_list->next; pv_run != g->pv_list; pv_run = pv_run_next)
+    {
+        pv_run_next = pv_run->next;
+        for(ph_run = pv_run->ph_list->next; ph_run != pv_run->ph_list; ph_run = ph_run_next)
+        {
+            ph_run_next = ph_run->next;
+            free(ph_run);
+        }
+        free(pv_run->ph_list);
+        free(pv_run);
+    }
+
+    free(g->pv_list);
+    free(g);
+    *pp_g = NULL;
+
+    return (SUCCESS);
 }
 
 /*vertical list management - Interface routines*/
@@ -163,7 +215,7 @@ vnode_t* v_search_node(vlist_t* pv_list, vertex_t v)
     vnode_t* pv_run = NULL;
 
     pv_run = pv_list->next;
-    while(pv_run->next != pv_list)
+    while(pv_run!= pv_list)
     {
         if(pv_run->v == v)
             return (pv_run);
@@ -197,7 +249,7 @@ hlist_t* h_create_list(void)
     return (ph_list);
 }
 
-status_t h_insert_end(vlist_t* ph_list, vertex_t v)
+status_t h_insert_end(hlist_t* ph_list, vertex_t v)
 {
     h_generic_insert(ph_list->prev, h_get_node(v), ph_list);
     return (SUCCESS);
@@ -220,7 +272,7 @@ void h_generic_delete(hnode_t* p_delete_node)
     p_delete_node = NULL; 
 }
 
-hnode_t* h_search_node(hlist_t* ph_list, vertex_t* v)
+hnode_t* h_search_node(hlist_t* ph_list, vertex_t v)
 {
     hnode_t* ph_run = NULL;
 
@@ -231,6 +283,7 @@ hnode_t* h_search_node(hlist_t* ph_list, vertex_t* v)
             return (ph_run);
         ph_run = ph_run->next;
     }
+    return (NULL);
 }
 
 hnode_t* h_get_node(vertex_t v)

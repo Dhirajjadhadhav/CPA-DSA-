@@ -111,6 +111,7 @@ status_t remove_start(list_t* p_list)
     if(NULL == p_list->next)
         return (LIST_EMPTY);
     generic_delete(p_list->next);
+    return (SUCCESS);
 }
 
 status_t remove_end(list_t* p_list)
