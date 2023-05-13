@@ -11,7 +11,7 @@
 #define SUCCEESS            1
 #define TRUE                1
 #define FALSE               0
-#define G_INVLIAD_VERTEX    2
+#define G_INVALID_VERTEX    2
 #define G_INVALID_EDGE      3
 #define G_VERTEX_EXISTS     4
 #define G_VERTEX_EXISTS     5
@@ -78,7 +78,7 @@ status_t remove_vertex(graph_t* g, vertex_t v);
 status_t remove_edge(graph_t* g, vertex_t v_start, vertex_t v_end);
 void show_graph(graph_t* g, const char* msg);
 status_t destroy_graph(graph_t** pp_g);
-status_t bellman_foed(graph_t* g, vertex_t s);
+status_t bellman_ford(graph_t* g, vertex_t s);
 
 /*verticale list interface routines */
 vlist_t* v_create_list(void);
@@ -93,7 +93,7 @@ vnode_t* v_get_node(vertex_t v);
 
 /*Horizontal list interface routines*/
 hlist_t* h_create_list(void);
-status_t h_insert_end(hlist_t* ph_list, vertex_t v);
+status_t h_insert_end(hlist_t* ph_list, vertex_t v, double w);
 status_t h_destroy_list(hlist_t** pph_list);
 
 /*Horizontal list helper routines */
