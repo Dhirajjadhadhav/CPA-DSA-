@@ -40,7 +40,7 @@ status_t add_edge(graph_t* g, vertex_t v_start, vertex_t v_end, double w){
 
     ph_end_in_start = h_search_node(pv_start->ph_list, v_start);
     if(NULL != ph_end_in_start)
-        return (G_INVALID_EDGE);
+        return (G_EDGE_EXISTS);
     
     h_insert_end(pv_start->ph_list, v_end, w);
     return (SUCCEESS);
@@ -76,6 +76,9 @@ status_t remove_edge(graph_t* g, vertex_t v_start, vertex_t v_end)
         return (G_INVALID_VERTEX);
     
     ph_end_in_start = h_search_node(pv_start->ph_list, v_end);
+    if(ph_end_in_start == NULL)
+        return (G_INVALID_EDGE);
+
     h_generic_delete(ph_end_in_start);
     g->nr_edges--;
     return (SUCCEESS);
@@ -141,13 +144,59 @@ status_t destroy_graph(graph_t** pp_g)
 
 status_t bellman_ford(graph_t* g, vertex_t s)
 {
+    vnode_t* pv_s = NULL;
+    vnode_t* pv_run = NULL;
+    vnode_t* pv_of_ph = NULL;
+    hnode_t* ph_run = NULL;
 
+    ssize_t i;
+
+    pv_s = v_search_node(g->pv_list, s);
+    if(pv_s == NULL)
+        return (G_INVALID_VERTEX);
+    
+    /* initialise single source ->start */
+    for(pv_run = g->pv_list->next; pv_run!=g->pv_list; pv_run = pv_run->next)
+    {
+        pv_run->d = INFINITY;
+        pv_run->v_pred = NULL;
+    }
+
+    pv_s->d = 0.0;
+    /*initialise single source->finish */
+    for(i = 0; i<g->nr_vertices-1; ++i)
+    {
+        for(pv_run = g->pv_list->next; pv_run!=g->pv_list; pv_run = pv_run->next)
+        {
+            for(ph_run = pv_run->ph_list->next; ph_run != pv_run->ph_list; pv_run = pv_run->next)
+            {
+                pv_of_ph = v_search_node(g->pv_list, ph_run->v);
+                /*relar->start*/
+                if(pv_of_ph->d > pv_run->d + ph_run->w)
+                {
+                    pv_of_ph->d = pv_run->d +ph_run->w;
+                    pv_of_ph->v_pred = pv_run;
+                }
+                /* relax-> finish */
+            }
+        }
+    }
+    /*checking for negative path cycle */
+    for(pv_run =g->pv_list->next; pv_run != g->pv_list; pv_run = pv_run->next)
+    {
+        for(ph_run = pv_run->ph_list->next; ph_run!=pv_run->ph_list; ph_run = ph_run->next)
+        {
+            pv_of_ph = v_search_node(g->pv_list, ph_run->v);
+            if(pv_of_ph->d > pv_run->d + ph_run->v)
+                return (FALSE);                 /*Negative cycle exists */
+        }
+    }
 }
 
-/*verticale list interface routines */
+/* verticale list interface routines */
 vlist_t* v_create_list(void)
 {
-    vnode_t* pv_list = NULL;
+    vlist_t* pv_list = NULL;
 
     pv_list = v_get_node(-1);
     pv_list->ph_list = NULL;
@@ -381,13 +430,39 @@ vnodeptr_stack_t* vptr_create_stack(void)
 }
 status_t vnodeptr_push(vnodeptr_stack_t* pvptr_stack, vnode_t* pv_node)
 {
-    if(vnodeptr_is_stack_empty(pvptr_stack) == TRUE)
-    
+    return (vnodeptr_insert_end(pvptr_stack, pv_node));
 }
-status_t vnodeptr_pop(vnodeptr_stack_t* pvptr_stack, vnode_t** ppv_node);
-status_t vnodeptr_top(vnodeptr_stack_t* pvptr_stack, vnode_t** ppv_node);
-status_t vnodeptr_is_stack_empty(vnodeptr_t* pvptr_stack);
-status_t vnodeptr_destroy_stack(vnodeptr_t** pvptr_stack);
+
+status_t vnodeptr_pop(vnodeptr_stack_t* pvptr_stack, vnode_t** ppv_node)
+{
+    return (vnodeptr_pop_end(pvptr_stack, ppv_node));   
+}
+
+status_t vnodeptr_top(vnodeptr_stack_t* pvptr_stack, vnode_t** ppv_node)
+{
+    return (vnodeptr_get_end(pvptr_stack, ppv_node));
+}
+
+status_t vnodeptr_is_stack_empty(vnodeptr_t* pvptr_stack)
+{
+    return (vnodeptr_is_list_empty(pvptr_stack));
+}
+
+status_t vnodeptr_destroy_stack(vnodeptr_t** pvptr_stack)
+{
+    return (vnodeptr_destroy_list(pvptr_stack) == SUCCEESS && pvptr_stack == NULL);
+}
 
 /*general helper routines */
-void* xcalloc(size_t nr_element, size_t size_per_element);
+void* xcalloc(size_t nr_element, size_t size_per_element)
+{
+    void* p = NULL;
+
+    p = calloc(nr_element, size_per_element);
+    if(NULL == p)
+    {
+        fprintf(stderr, "calloc:fatal:out of memory\n");
+        exit(EXIT_FAILURE);
+    }
+    return (p);
+}

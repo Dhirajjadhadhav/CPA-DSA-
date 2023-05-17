@@ -14,7 +14,7 @@
 #define G_INVALID_VERTEX    2
 #define G_INVALID_EDGE      3
 #define G_VERTEX_EXISTS     4
-#define G_VERTEX_EXISTS     5
+#define G_EDGE_EXISTS       5
 
 /*typedef declaratioon */
 typedef long long int ssize_t;
