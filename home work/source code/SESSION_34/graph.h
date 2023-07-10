@@ -8,7 +8,7 @@
 #include <math.h>
 
 /*defines */
-#define SUCCEESS            1
+#define SUCCESS            1
 #define TRUE                1
 #define FALSE               0
 #define G_INVALID_VERTEX    2
@@ -116,7 +116,7 @@ void vnodeptr_generic_delete(vnodeptr_t* p_delete);
 vnodeptr_t* vnodeptr_search_node(vnodeptr_list_t* pvptr_list, vnode_t* pv);
 vnodeptr_t* vnodeptr_get_node(vnode_t* pv);
 
-/*vnodeptr stack inttrface routines*/
+/*vnodeptr stack interface routines*/
 vnodeptr_stack_t* vptr_create_stack(void);
 status_t vnodeptr_push(vnodeptr_stack_t* pvptr_stack, vnode_t* pv_node);
 status_t vnodeptr_pop(vnodeptr_stack_t* pvptr_stack, vnode_t** ppv_node);

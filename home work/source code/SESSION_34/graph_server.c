@@ -18,11 +18,12 @@ graph_t* create_graph(void){
 status_t add_vertex(graph_t* g, vertex_t v){
     vnode_t* pv_node = NULL;
 
+    show_graph(g,  "\n___________________\n");
     pv_node = v_search_node(g->pv_list, v);
     if(NULL != pv_node)
         return (G_VERTEX_EXISTS);
     v_insert_end(g->pv_list, v);
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 status_t add_edge(graph_t* g, vertex_t v_start, vertex_t v_end, double w){
@@ -43,11 +44,12 @@ status_t add_edge(graph_t* g, vertex_t v_start, vertex_t v_end, double w){
         return (G_EDGE_EXISTS);
     
     h_insert_end(pv_start->ph_list, v_end, w);
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 status_t remove_vertex(graph_t* g, vertex_t v){ /*incomplete*/
     vnode_t* pv_node = NULL;
+    vnode_t* pv_run = NULL;
     vnode_t* pv_of_ph = NULL;
     hnode_t* ph_run = NULL;
     hnode_t* ph_run_next = NULL;
@@ -56,12 +58,36 @@ status_t remove_vertex(graph_t* g, vertex_t v){ /*incomplete*/
     if(NULL == pv_node)
         return (G_INVALID_VERTEX);
     
+    /*To delete the vertex and the adjacency list (horizontal list) of vertex v */
     for(ph_run = pv_node->ph_list->next; ph_run != pv_node->ph_list; ph_run = ph_run_next){
         ph_run_next = ph_run->next;
         free(ph_run);
     }
+
+
+    /*TO delete the vertex from other vertex adjacency list  
+        because this no longer in the graph and the are pointing to invalid vertex*/
+    for(
+        pv_run = g->pv_list->next;
+        pv_run != g->pv_list;
+        pv_run = pv_run->next
+    )
+    {
+        for(
+            ph_run = pv_run->ph_list->next;
+            ph_run != pv_run->ph_list;
+            ph_run = ph_run->next
+        )
+        {
+            if(ph_run->v == v)
+                h_generic_delete(ph_run);
+        }
+    }
+
     free(pv_node->ph_list);
     v_generic_delete(pv_node);
+
+    return SUCCESS;
 }
 
 status_t remove_edge(graph_t* g, vertex_t v_start, vertex_t v_end)
@@ -81,7 +107,7 @@ status_t remove_edge(graph_t* g, vertex_t v_start, vertex_t v_end)
 
     h_generic_delete(ph_end_in_start);
     g->nr_edges--;
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 void show_graph(graph_t* g, const char* msg)
@@ -99,9 +125,9 @@ void show_graph(graph_t* g, const char* msg)
         pv_run = pv_run->next
     )
     {
-        printf("\n[%lld]\t<->\t");
+        printf("\n[%lld]\t<->\t", pv_run->v);
         for(ph_run = pv_run->ph_list->next;
-            ph_run != pv_run->next;
+            ph_run != pv_run->ph_list;
             ph_run = ph_run->next
         )
         {
@@ -121,7 +147,7 @@ status_t destroy_graph(graph_t** pp_g)
     for(
         pv_run = g->pv_list->next;
         pv_run != g->pv_list;
-        pv_run  = ph_run_next
+        pv_run  = pv_run_next
     )
     {
         pv_run_next = pv_run->next;
@@ -140,6 +166,8 @@ status_t destroy_graph(graph_t** pp_g)
     free(g->pv_list);
     free(g);
     *pp_g = NULL;
+
+    return (SUCCESS);
 }
 
 status_t bellman_ford(graph_t* g, vertex_t s)
@@ -191,6 +219,8 @@ status_t bellman_ford(graph_t* g, vertex_t s)
                 return (FALSE);                 /*Negative cycle exists */
         }
     }
+
+    return (SUCCESS);
 }
 
 /* verticale list interface routines */
@@ -198,7 +228,7 @@ vlist_t* v_create_list(void)
 {
     vlist_t* pv_list = NULL;
 
-    pv_list = v_get_node(-1);
+    pv_list = xcalloc(1, sizeof(vlist_t));
     pv_list->ph_list = NULL;
     pv_list->next = pv_list;
     pv_list->prev = pv_list;
@@ -207,7 +237,7 @@ vlist_t* v_create_list(void)
 status_t v_insert_end(vlist_t* pv_list, vertex_t v)
 {
     v_generic_insert(pv_list->prev, v_get_node(v), pv_list);
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 status_t v_destroy_list(vlist_t** ppv_list)
 {
@@ -224,10 +254,10 @@ status_t v_destroy_list(vlist_t** ppv_list)
     free(pv_list);
     *ppv_list = NULL;
 
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
-/* verttical list helper routines*/
+/* vertical list helper routines*/
 void v_generic_insert(vnode_t* p_beg, vnode_t* p_mid, vnode_t* p_end)
 {
     p_mid->next = p_end;
@@ -276,6 +306,7 @@ hlist_t* h_create_list(void)
 status_t h_insert_end(hlist_t* ph_list, vertex_t v, double w)
 {
     h_generic_insert(ph_list->prev, h_get_node(v, w), ph_list);
+    return SUCCESS;
 
 }
 status_t h_destroy_list(hlist_t** pph_list)
@@ -292,7 +323,7 @@ status_t h_destroy_list(hlist_t** pph_list)
     }
     free(ph_list);
     *pph_list = NULL;
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 /*Horizontal list helper routines */
@@ -346,20 +377,20 @@ vnodeptr_list_t* vnodeptr_create_list(void)
 status_t vnodeptr_insert_end(vnodeptr_list_t* pvptr_list, vnode_t* pv_node)
 {
     vnodeptr_generic_insert(pvptr_list->prev, vnodeptr_get_node(pv_node), pvptr_list);
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 status_t vnodeptr_get_end(vnodeptr_list_t* pvptr_list, vnode_t** pp_vnode)
 {
     *pp_vnode = pvptr_list->prev->pv;
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 status_t vnodeptr_pop_end(vnodeptr_list_t* pvptr_list, vnode_t** pp_vnode)
 {
     *pp_vnode = pvptr_list->prev->pv;
     vnodeptr_generic_delete(pvptr_list->prev);
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 status_t vnodeptr_is_list_empty(vnodeptr_list_t* pvptr_list)
@@ -384,7 +415,7 @@ status_t vnodeptr_destroy_list(vnodeptr_list_t** ppvptr_list)
     }
     free(pvptr_list);
     *ppvptr_list = NULL;
-    return (SUCCEESS);
+    return (SUCCESS);
 }
 
 /*vnodeptr list helper routines */
@@ -450,7 +481,7 @@ status_t vnodeptr_is_stack_empty(vnodeptr_t* pvptr_stack)
 
 status_t vnodeptr_destroy_stack(vnodeptr_t** pvptr_stack)
 {
-    return (vnodeptr_destroy_list(pvptr_stack) == SUCCEESS && pvptr_stack == NULL);
+    return (vnodeptr_destroy_list(pvptr_stack) == SUCCESS && pvptr_stack == NULL);
 }
 
 /*general helper routines */
